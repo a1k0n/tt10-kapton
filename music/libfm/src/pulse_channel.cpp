@@ -23,6 +23,9 @@ void PulseState::noteOn(int note, int velocity, const PulseConfig& config) {
   this->phase_inc = (1 << PHASEBITS) * 440 * pow(2, (note - 69 + (12 * config.octave_transpose)) / 12.0) / config.sample_rate;
   this->adsr_state = 2;
   this->volume = 4095;
+  this->vibrato_sin = 0;
+  this->vibrato_cos = 1023;
+  this->vibrato_level = 0;
 
   this->primary_phase = 0;
   this->secondary_phase = 0;
@@ -34,6 +37,9 @@ void PulseState::noteOff(const PulseConfig& config) {
 
 
 void PulseState::tickEnvelopes(const PulseConfig& config) {
+  vibrato_cos -= vibrato_sin >> config.vibrato_rate;
+  vibrato_sin += vibrato_cos >> config.vibrato_rate;
+
   switch (adsr_state) {
     case 0:
       return;
@@ -50,6 +56,11 @@ void PulseState::tickEnvelopes(const PulseConfig& config) {
       if (volume <= config.sustain) {
         volume = config.sustain;
         adsr_state = 3;
+      }
+      if (config.vibrato_envelope) {
+        int dl = config.vibrato_depth - vibrato_level;
+        int rounding = (1<<config.vibrato_envelope) - 1;
+        vibrato_level += (dl + rounding) >> config.vibrato_envelope;
       }
       break;
     }
@@ -92,12 +103,14 @@ void PulseState::render(int16_t* buffer, int num_samples, const PulseConfig& con
     }
     buffer[i] += sample;
 
-    primary_phase += phase_inc;
+    int vibrato_inc = vibrato_level * vibrato_cos >> 10;
+
+    primary_phase += phase_inc + vibrato_inc;
     // synchronize scope buffer to primary phase
     if (scope_index >= 1024 && primary_phase & (1<<PHASEBITS)) {
       scope_index = 0;
     }
-    secondary_phase += phase_inc * config.carrier_multiplier + config.detune;
+    secondary_phase += (phase_inc + vibrato_inc) * config.carrier_multiplier + config.detune;
     primary_phase &= (1<<PHASEBITS)-1;
     secondary_phase &= (1<<PHASEBITS)-1;
     if (scope_index < 1024) {

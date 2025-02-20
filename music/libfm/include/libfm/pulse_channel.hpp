@@ -52,7 +52,8 @@ class PulseConfig {
   int sustain{1024};  // sustain level
   int release{4};  // release speed (exponential toward 0)
   int vibrato_depth{0};  // vibrato depth
-  int vibrato_rate{0};  // vibrato envelope rate during sustain (0=off, 1=slow, 2=medium, 3=fast)
+  int vibrato_rate{4};  // vibrato speed shift (0=30Hz, 1=15Hz, 2=7.5Hz, 3=3.75Hz, 4=1.875Hz, 5=0.9375Hz)
+  int vibrato_envelope{0};  // vibrato envelope speed
 };
 
 }  // namespace libfm

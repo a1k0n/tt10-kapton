@@ -105,8 +105,9 @@ void Audio::gui() {
   ImGui::SliderInt("Decay", &pulse_config_.decay, 0, 11);
   ImGui::SliderInt("Sustain", &pulse_config_.sustain, 0, 4095);
   ImGui::SliderInt("Release", &pulse_config_.release, 0, 11);
-  ImGui::SliderInt("Vibrato Depth", &pulse_config_.vibrato_depth, 0, 10);
-  ImGui::SliderInt("Vibrato Rate", &pulse_config_.vibrato_rate, 0, 10);
+  ImGui::SliderInt("Vibrato Depth", &pulse_config_.vibrato_depth, 0, 16);
+  ImGui::SliderInt("Vibrato Rate", &pulse_config_.vibrato_rate, 0, 5);
+  ImGui::SliderInt("Vibrato Envelope", &pulse_config_.vibrato_envelope, 0, 10);
 
   // Visualizations
   for (auto& channel : pulse_state_) {
@@ -198,6 +199,7 @@ void Audio::saveParameters(const char* filename) {
   fprintf(file, "Release=%d\n", pulse_config_.release);
   fprintf(file, "VibratoDepth=%d\n", pulse_config_.vibrato_depth);
   fprintf(file, "VibratoRate=%d\n", pulse_config_.vibrato_rate);
+  fprintf(file, "VibratoEnvelope=%d\n", pulse_config_.vibrato_envelope);
 
   fclose(file);
 }
@@ -238,6 +240,7 @@ void Audio::loadParameters(const char* filename) {
     check_parami(line, "Release=", &pulse_config_.release);
     check_parami(line, "VibratoDepth=", &pulse_config_.vibrato_depth);
     check_parami(line, "VibratoRate=", &pulse_config_.vibrato_rate);
+    check_parami(line, "VibratoEnvelope=", &pulse_config_.vibrato_envelope);
   }
   fclose(file);
 } 
