@@ -105,6 +105,9 @@ void Audio::gui() {
   ImGui::SliderInt("Decay", &pulse_config_.decay, 0, 11);
   ImGui::SliderInt("Sustain", &pulse_config_.sustain, 0, 4095);
   ImGui::SliderInt("Release", &pulse_config_.release, 0, 11);
+  ImGui::Checkbox("LPF", &pulse_config_.lpf_enabled);
+  ImGui::SliderInt("LPF K1 (resonance)", &pulse_config_.lpf_k1, 0, 10);
+  ImGui::SliderInt("LPF K2 (cutoff)", &pulse_config_.lpf_k2, 0, 10);
   ImGui::SliderInt("Vibrato Depth", &pulse_config_.vibrato_depth, 0, 16);
   ImGui::SliderInt("Vibrato Rate", &pulse_config_.vibrato_rate, 0, 5);
   ImGui::SliderInt("Vibrato Envelope", &pulse_config_.vibrato_envelope, 0, 10);
@@ -197,6 +200,9 @@ void Audio::saveParameters(const char* filename) {
   fprintf(file, "Decay=%d\n", pulse_config_.decay);
   fprintf(file, "Sustain=%d\n", pulse_config_.sustain);
   fprintf(file, "Release=%d\n", pulse_config_.release);
+  fprintf(file, "LPF=%d\n", pulse_config_.lpf_enabled);
+  fprintf(file, "LPFK1=%d\n", pulse_config_.lpf_k1);
+  fprintf(file, "LPFK2=%d\n", pulse_config_.lpf_k2);
   fprintf(file, "VibratoDepth=%d\n", pulse_config_.vibrato_depth);
   fprintf(file, "VibratoRate=%d\n", pulse_config_.vibrato_rate);
   fprintf(file, "VibratoEnvelope=%d\n", pulse_config_.vibrato_envelope);
@@ -238,6 +244,13 @@ void Audio::loadParameters(const char* filename) {
     check_parami(line, "Decay=", &pulse_config_.decay);
     check_parami(line, "Sustain=", &pulse_config_.sustain);
     check_parami(line, "Release=", &pulse_config_.release);
+    int lpf_enabled;
+    check_parami(line, "LPF=", &lpf_enabled);
+    if (lpf_enabled) {
+      pulse_config_.lpf_enabled = true;
+      check_parami(line, "LPFK1=", &pulse_config_.lpf_k1);
+      check_parami(line, "LPFK2=", &pulse_config_.lpf_k2);
+    }
     check_parami(line, "VibratoDepth=", &pulse_config_.vibrato_depth);
     check_parami(line, "VibratoRate=", &pulse_config_.vibrato_rate);
     check_parami(line, "VibratoEnvelope=", &pulse_config_.vibrato_envelope);

@@ -14,9 +14,9 @@ def notehex(noteidx):
 
 
 # lowercase indicates flat
-def letterinc(name, octave):
+def letterinc(name, octave, octave_transpose):
     idx = 'CdDeEFgGaAbB'.index(name)
-    return noteinc(idx + 12*(ord(octave) - ord('0')))
+    return noteinc(idx + 12*(ord(octave) - ord('0') + octave_transpose))
 
     
 class pulseconfig:
@@ -46,7 +46,10 @@ class pulse:
         self.vibrato_level = 0
         self.config = config
 
-    def tickSong(self, note: str, octave: str):
+    def tickSong(self, noteidx: int, note: str, octave: str):
+        noteidx = noteidx % len(note)
+        note = note[noteidx]
+        octave = octave[noteidx]
         if note != '.':
             if note == '-':
                 # note off
@@ -55,7 +58,7 @@ class pulse:
                 # note on
                 self.adsr_state = 2
                 self.volume = 4095
-                self.phase_inc = letterinc(note, octave)
+                self.phase_inc = letterinc(note, octave, self.config.octave_transpose)
                 self.vibrato_level = 0
                 print('tickSong', note, octave, self.phase_inc)
                 #self.vibrato_sin = 0
@@ -116,4 +119,32 @@ class pulse:
             self.primary_phase &= (1<<PHASEBITS)-1
             self.secondary_phase &= (1<<PHASEBITS)-1
 
+
+class snare:
+    def __init__(self, snare_decay: int):
+        self.lfsr_vol = 16
+        self.lfsr = 0x1caf
+        self.tick_count = 0
+        self.snare_decay = snare_decay
+
+    def tickEnvelopes(self):
+        self.tick_count += 1
+        if self.tick_count >= self.snare_decay:
+            if self.lfsr_vol < 16:
+                self.lfsr_vol += 1
+            self.tick_count = 0
+
+    def tickSong(self, noteidx: int, note: str):
+        noteidx = noteidx % len(note)
+        note = note[noteidx]
+        if note == 'x':
+            self.lfsr_vol = 1
+
+    def render(self, buffer):
+        N = len(buffer)
+        for i in range(N):
+            if (i&1) == 0:
+                self.lfsr = self.lfsr&0x8000 and ((self.lfsr<<1)^0x8016) or (self.lfsr<<1)
+                self.lfsr &= 0xffff
+            buffer[i] += self.lfsr >> self.lfsr_vol
 

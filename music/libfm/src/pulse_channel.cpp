@@ -101,6 +101,12 @@ void PulseState::render(int16_t* buffer, int num_samples, const PulseConfig& con
     } else {
       sample -= volume;
     }
+    if (config.lpf_enabled) {
+      lpf_y += lpf_v >> config.lpf_k2;
+      lpf_v -= lpf_v >> config.lpf_k1;
+      lpf_v += sample - lpf_y;
+      sample = lpf_y;
+    }
     buffer[i] += sample;
 
     int vibrato_inc = vibrato_level * vibrato_cos >> 10;
