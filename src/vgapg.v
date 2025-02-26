@@ -53,6 +53,13 @@ module vgademo(
   parameter LOGO_HEIGHT = 128;
   parameter LOGO_SPEED = 10'd2;
 
+  parameter INTRO_FRAME_COUNT = 640;
+  parameter INITIAL_FRAME_COUNT = 0;
+
+  reg [6:0] lfsr;
+  reg [6:0] lfsr_frame;
+  reg [6:0] lfsr_row;
+
   reg [9:0] logo_x;
   reg [9:0] logo_y;
   reg logo_dx, logo_dy;
@@ -71,13 +78,58 @@ module vgademo(
 
   reg [12:0] frame_counter;
 
-  //reg signed [5:0] ysqr;
-  //reg signed [5:0] xsqr;
+  task next_frame;
+  begin
+    pix_y <= 0;
+    frame_counter <= frame_counter + 1;
+    if (frame_counter[1:0] == 2) begin
+      lfsr_frame <= {lfsr_frame[5:0], lfsr_frame[6] ^ lfsr_frame[5]};
+    end
+    
+    lfsr <= lfsr_frame;
+    lfsr_row <= lfsr_frame;
+    if (logo_dx && logo_x > 640 - LOGO_WIDTH - 2*LOGO_SPEED) begin
+      logo_dx <= 0;
+    end else if (!logo_dx && logo_x < 2*LOGO_SPEED) begin
+      logo_dx <= 1;
+    end
+    if (logo_dy && logo_y > 480 - LOGO_HEIGHT - 2*LOGO_SPEED) begin
+      logo_dy <= 0;
+    end else if (!logo_dy && logo_y < 2*LOGO_SPEED) begin
+      logo_dy <= 1;
+    end
+    logo_x <= logo_x + (logo_dx ? LOGO_SPEED : -LOGO_SPEED);
+    logo_y <= logo_y + (logo_dy ? LOGO_SPEED : -LOGO_SPEED);
+  end
+  endtask
 
-  //wire signed [17:0] xoffset = -320 + pix_x;
-  //wire signed [18:0] xoffsetsqr = 320*320;
-  //wire signed [17:0] yoffset = -240 + pix_y;
-  //reg signed [18:0] yoffsetsqr;
+  task next_row;
+  begin
+    pix_x <= 0;
+    if (pix_y == V_MAX) begin
+      next_frame();
+    end else begin
+      pix_y <= pix_y + 1;
+      lfsr <= lfsr_row;
+    end
+  end
+  endtask
+
+  task next_pixel;
+  begin
+    if (pix_x == H_MAX) begin
+      next_row();
+    end else begin
+      if (circuit_v == 7 && pix_x >= 770) begin
+        lfsr_row <= {lfsr_row[5:0], lfsr_row[6] ^ lfsr_row[5]};
+      end
+      pix_x <= pix_x + 1;
+      if (circuit_u == 7) begin
+        lfsr <= {lfsr[5:0], lfsr[6] ^ lfsr[5]};
+      end
+    end
+  end
+  endtask
 
   always @(posedge clk) begin
     if (!rst_n) begin
@@ -87,38 +139,12 @@ module vgademo(
       logo_y <= 128;
       logo_dx <= 0;
       logo_dy <= 1;
-      //yoffsetsqr <= 240*248 - 30000;
-      frame_counter <= 0;
+      frame_counter <= INITIAL_FRAME_COUNT;
+      lfsr_frame <= 7'h55;
+      lfsr_row <= 7'h55;
+      lfsr <= 7'h55;
     end else begin
-      if (pix_x == H_MAX) begin
-        //xsqr <= xoffsetsqr;
-        //ysqr <= ysqr + {yoffset, 1'b1};
-        pix_x <= 0;
-        if (pix_y == V_MAX) begin
-          pix_y <= 0;
-          // new frame
-          frame_counter <= frame_counter + 1;
-          //ysqr <= yoffsetsqr;
-          //yoffsetsqr <= yoffsetsqr + {yoffset, 1'b1};
-          if (logo_dx && logo_x > 640 - LOGO_WIDTH - 2*LOGO_SPEED) begin
-            logo_dx <= 0;
-          end else if (!logo_dx && logo_x < 2*LOGO_SPEED) begin
-            logo_dx <= 1;
-          end
-          if (logo_dy && logo_y > 480 - LOGO_HEIGHT - 2*LOGO_SPEED) begin
-            logo_dy <= 0;
-          end else if (!logo_dy && logo_y < 2*LOGO_SPEED) begin
-            logo_dy <= 1;
-          end
-          logo_x <= logo_x + (logo_dx ? LOGO_SPEED : -LOGO_SPEED);
-          logo_y <= logo_y + (logo_dy ? LOGO_SPEED : -LOGO_SPEED);
-        end else begin
-          pix_y <= pix_y + 1;
-        end
-      end else begin
-        pix_x <= pix_x + 1;
-        //xsqr <= xsqr + {xoffset, 1'b1};
-      end
+      next_pixel();
     end
   end
 
@@ -131,16 +157,28 @@ module vgademo(
   wire blank = pix_x >= H_DISPLAY || pix_y >= V_DISPLAY;
 
   wire [12:0] transition_frame = frame_counter - {7'b0, transition_index};
-  wire intro_logo = transition_frame < 640;
+  wire intro_logo = transition_frame < INTRO_FRAME_COUNT;
   wire [1:0] intrologo_r = logo_on ? 2'b10 : 2'b11;
   wire [1:0] intrologo_g = logo_on ? 2'b00 : 2'b11;
   wire [1:0] intrologo_b = logo_on ? 2'b00 : 2'b11;
 
+  reg truchet_tile [0:63];
+  initial $readmemh("../data/truchet.hex", truchet_tile);
+
   wire circuit_screen = !intro_logo;
-  wire circuit_trace = (pix_x[2:0] - pix_y[2:0]) == 0;
-  wire [1:0] circuit_r = circuit_trace ? 2'b01 : 2'b00;
-  wire [1:0] circuit_g = circuit_trace ? 2'b11 : 2'b01;
-  wire [1:0] circuit_b = circuit_trace ? 2'b10 : 2'b01;
+  //wire circuit_trace = (pix_x[2:0] - pix_y[2:0]) == 0;
+
+  wire [9:0] hscroll_x = pix_x + {frame_counter[8:0], 1'b0};
+  wire [2:0] circuit_u = hscroll_x[2:0];
+  wire [2:0] circuit_v = pix_y[2:0];
+  wire circuit_tile_idx = lfsr[0]; // (hscroll_x[6] ^ pix_y[6]);
+  wire circuit_trace = truchet_tile[{circuit_tile_idx ? circuit_v : ~circuit_v, circuit_u}];
+
+  wire kapton_tape = pix_y[9:6] == 6;
+
+  wire [1:0] circuit_r = kapton_tape ? circuit_trace ? 2'b10 : 2'b01 : circuit_trace ? 2'b01 : 2'b00;
+  wire [1:0] circuit_g = kapton_tape ? circuit_trace ? 2'b11 : 2'b01 : circuit_trace ? 2'b11 : 2'b01;
+  wire [1:0] circuit_b = kapton_tape ? 2'b00 : circuit_trace ? 2'b10 : 2'b01;
 
   assign R = blank ? 0 : pix_x < audio_sample[12:4] ? 2'b01 : intro_logo ? intrologo_r : circuit_r;
   assign G = blank ? 0 : pix_x < audio_sample[12:4] ? 2'b01 : intro_logo ? intrologo_g : circuit_g;
