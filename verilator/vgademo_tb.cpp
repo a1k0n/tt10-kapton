@@ -14,16 +14,6 @@
 #include <SDL2/SDL_image.h>
 #endif
 
-static inline uint32_t lowextend6(uint32_t x) {
-  // take a 2-bit input, shift left extending to 8 bits, but cloning into the
-  // remaining 6 bits
-  // 00 -> 00000000
-  // 01 -> 01010101
-  // 10 -> 10101010
-  // 11 -> 11111111
-  return x*0x55;
-}
-
 int main(int argc, char** argv) {
   Verilated::commandArgs(argc, argv);
 
@@ -101,16 +91,16 @@ int main(int argc, char** argv) {
         // clock the system
         top->clk = 0; top->eval(); top->clk = 1; top->eval();
         if (v < V_DISPLAY && h < H_DISPLAY) {
-          uint8_t uo_out = top->uo_out;
-          uint32_t r = (uo_out&1 << 1) | (uo_out&16 >> 4);
-          uint32_t g = (uo_out&2) | (uo_out&32 >> 5);
-          uint32_t b = (uo_out&4 >> 1) | (uo_out&64 >> 6);
+          // assign uo_out = {hsync, B[0], G[0], R[0], vsync, B[1], G[1], R[1]};
+          uint32_t uo_out = top->uo_out;
+          uint32_t r = ((uo_out&1) << 1) | ((uo_out&16) >> 4);
+          uint32_t g = ((uo_out&2)) | ((uo_out&32) >> 5);
+          uint32_t b = ((uo_out&4) >> 1) | ((uo_out&64) >> 6);
           r = (r*0x55) << 16;
           g = (g*0x55) << 8;
           b = b*0x55;
           uint32_t color = 0xFF000000 | r | g | b;
-          pixels[k] = color;
-          k++;
+          pixels[k++] = color;
         }
       }
     }

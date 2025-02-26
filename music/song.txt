@@ -5,7 +5,7 @@ main melody section chords/bass root
 A section
  1  2  3  4  5  6  7  8
 |C  C  Gm Gm Ab Eb C  C  |   melody: |.. E F G   C|Bb A G .. G|Ab Eb Eb Eb Eb|Eb Eb Eb F|G
-|C  C  Eb Gm Ab Eb C  C  |           |.. E F G   C|Bb C D .. D|Eb F  G  C    |Eb D  Eb D|E
+|C  C  Eb Gm Ab Eb Bb C  |           |.. E F G   C|Bb C D .. D|Eb F  G  C    |Eb D  Eb D|E
        ^^          ^^^^ arpeggios
     turnaround
 
