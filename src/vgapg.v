@@ -57,6 +57,12 @@ module vgademo(
   reg [9:0] logo_y;
   reg logo_dx, logo_dy;
 
+  reg logo_img[0:16383];
+  initial $readmemh("../data/logo.hex", logo_img);
+
+  wire [6:0] logo_u = pix_x[6:0] - logo_x[6:0];
+  wire [6:0] logo_v = pix_y[6:0] - logo_y[6:0];
+
   reg [9:0] pix_x;
   reg [9:0] pix_y;
 
@@ -65,13 +71,13 @@ module vgademo(
 
   reg [12:0] frame_counter;
 
-  reg signed [18:0] ysqr;
-  reg signed [18:0] xsqr;
+  //reg signed [5:0] ysqr;
+  //reg signed [5:0] xsqr;
 
-  wire signed [17:0] xoffset = -320 + pix_x;
-  wire signed [18:0] xoffsetsqr = 320*320;
-  wire signed [17:0] yoffset = -240 + pix_y;
-  reg signed [18:0] yoffsetsqr;
+  //wire signed [17:0] xoffset = -320 + pix_x;
+  //wire signed [18:0] xoffsetsqr = 320*320;
+  //wire signed [17:0] yoffset = -240 + pix_y;
+  //reg signed [18:0] yoffsetsqr;
 
   always @(posedge clk) begin
     if (!rst_n) begin
@@ -81,18 +87,18 @@ module vgademo(
       logo_y <= 128;
       logo_dx <= 0;
       logo_dy <= 1;
-      yoffsetsqr <= 240*248 - 30000;
+      //yoffsetsqr <= 240*248 - 30000;
       frame_counter <= 0;
     end else begin
       if (pix_x == H_MAX) begin
-        xsqr <= xoffsetsqr;
-        ysqr <= ysqr + {yoffset, 1'b1};
+        //xsqr <= xoffsetsqr;
+        //ysqr <= ysqr + {yoffset, 1'b1};
         pix_x <= 0;
         if (pix_y == V_MAX) begin
           pix_y <= 0;
           // new frame
           frame_counter <= frame_counter + 1;
-          ysqr <= yoffsetsqr;
+          //ysqr <= yoffsetsqr;
           //yoffsetsqr <= yoffsetsqr + {yoffset, 1'b1};
           if (logo_dx && logo_x > 640 - LOGO_WIDTH - 2*LOGO_SPEED) begin
             logo_dx <= 0;
@@ -111,22 +117,23 @@ module vgademo(
         end
       end else begin
         pix_x <= pix_x + 1;
-        xsqr <= xsqr + {xoffset, 1'b1};
+        //xsqr <= xsqr + {xoffset, 1'b1};
       end
     end
   end
 
-  wire [1:0] incircle = (xsqr + ysqr) >> 14;
+  //wire [1:0] incircle = (xsqr + ysqr) >> 14;
 
   wire logo_on = (pix_x >= logo_x && pix_x < logo_x + LOGO_WIDTH &&
-                  pix_y >= logo_y && pix_y < logo_y + LOGO_HEIGHT);
+                  pix_y >= logo_y && pix_y < logo_y + LOGO_HEIGHT) &&
+                  logo_img[{logo_v, logo_u}];
 
   wire blank = pix_x >= H_DISPLAY || pix_y >= V_DISPLAY;
 
   wire [12:0] transition_frame = frame_counter - {7'b0, transition_index};
   wire intro_logo = transition_frame < 640;
-  wire [1:0] intrologo_r = 2'b11;
-  wire [1:0] intrologo_g = logo_on ? 2'b01 : 2'b11;
+  wire [1:0] intrologo_r = logo_on ? 2'b10 : 2'b11;
+  wire [1:0] intrologo_g = logo_on ? 2'b00 : 2'b11;
   wire [1:0] intrologo_b = logo_on ? 2'b00 : 2'b11;
 
   wire circuit_screen = !intro_logo;
@@ -135,9 +142,9 @@ module vgademo(
   wire [1:0] circuit_g = circuit_trace ? 2'b11 : 2'b01;
   wire [1:0] circuit_b = circuit_trace ? 2'b10 : 2'b01;
 
-  assign R = blank ? 0 : pix_x < audio_sample[12:6] ? 2'b01 : intro_logo ? intrologo_r : circuit_r;
-  assign G = blank ? 0 : pix_x < audio_sample[12:6] ? 2'b01 : intro_logo ? intrologo_g : circuit_g;
-  assign B = blank ? 0 : pix_x < audio_sample[12:6] ? 2'b10 : intro_logo ? intrologo_b : circuit_b;
+  assign R = blank ? 0 : pix_x < audio_sample[12:4] ? 2'b01 : intro_logo ? intrologo_r : circuit_r;
+  assign G = blank ? 0 : pix_x < audio_sample[12:4] ? 2'b01 : intro_logo ? intrologo_g : circuit_g;
+  assign B = blank ? 0 : pix_x < audio_sample[12:4] ? 2'b10 : intro_logo ? intrologo_b : circuit_b;
   
 
   // VGA signals
