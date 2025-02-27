@@ -9,12 +9,15 @@ You can also include images in this folder and reference them in the markdown. E
 
 ## How it works
 
-Explain how your project works
+It doesn't, yet.
 
 ## How to test
 
-Explain how to use your project
+Connect a TinyVGA Pmod to uo and an audio device to uio[7].
+
+Select the design, 25.175MHz clock, reset, and watch the demo.
 
 ## External hardware
 
-List external hardware used in your project (e.g. PMOD, LED display, etc), if any
+TinyTapeout competition hardware: TinyVGA Pmod, Audio DAC Pmod.
+
