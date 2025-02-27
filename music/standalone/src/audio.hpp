@@ -28,4 +28,9 @@ class Audio {
 
   fm::PulseConfig pulse_config_;
   fm::PulseState pulse_state_[4];
+
+  int tempo_ticks_per_beat_{5};
+  bool metronome_on_{false};
+  int metronome_beat_count_{0};
+  int metronome_tick_count_{0};
 }; 

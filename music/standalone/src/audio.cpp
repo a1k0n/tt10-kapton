@@ -40,7 +40,7 @@ Audio::Audio() {
     throw std::runtime_error("Failed to set hardware parameters");
   }
 
-  pulse_config_.sample_rate = SAMPLE_RATE;
+  pulse_config_.sample_rate = sample_rate;
 
   snd_pcm_nonblock(pcm_handle_, 0);
   pthread_create(&audio_thread_, NULL, AudioThreadEntry, this);
@@ -68,6 +68,15 @@ void Audio::noteOff(int note) {
 
 void Audio::gui() {
   int val;
+
+  bool metronome_on = metronome_on_;
+  ImGui::Checkbox("Metronome", &metronome_on_);
+  ImGui::SliderInt("Tempo", &tempo_ticks_per_beat_, 1, 12);
+  if (metronome_on_ && !metronome_on) {
+    // reset metronome when initially enabled
+    metronome_beat_count_ = -1;
+    metronome_tick_count_ = -1;
+  }
   
   /*
   ImGui::SliderInt("Octave Transpose", &fm_config_.octave_transpose, -4, 4);
@@ -124,6 +133,10 @@ void Audio::audioThread() {
   int16_t buffer[BUFFER_SIZE];
   int vsync_counter = 0;
 
+  int metronome_volume = 0;
+  int metronome_pitch = 0;
+  int metronome_phase = 0;
+
   while (running_) {
     memset(buffer, 0, sizeof(buffer));
     int samples_to_render = BUFFER_SIZE;
@@ -136,6 +149,12 @@ void Audio::audioThread() {
       for (int i = 0; i < 4; i++) {
         pulse_state_[i].render(buffer+offset, runlength, pulse_config_);
       }
+      if (metronome_on_) {
+        for (int i = 0; i < runlength; i++) {
+          buffer[offset+i] += metronome_volume * (metronome_phase & 0x8000 ? 1 : -1);
+          metronome_phase += metronome_pitch;
+        }
+      }
       samples_to_render -= runlength;
       offset += runlength;
       vsync_counter += runlength;
@@ -144,6 +163,24 @@ void Audio::audioThread() {
           pulse_state_[i].tickEnvelopes(pulse_config_);
         }
         vsync_counter = 0;
+        if (metronome_on_) {
+          metronome_volume -= (metronome_volume + 0x3) >> 2;
+          metronome_tick_count_++;
+          if (metronome_tick_count_ >= tempo_ticks_per_beat_) {
+            metronome_tick_count_ = 0;
+            metronome_beat_count_++;
+            // every 4 ticks, play a tick
+            if ((metronome_beat_count_ & 0x3) == 0) {
+              metronome_pitch = (1 << 15) * 440 / pulse_config_.sample_rate;
+              metronome_volume = 1024;
+            }
+            // on the downbeat, play a low pitch
+            if (metronome_beat_count_ >= 16) {
+              metronome_beat_count_ = 0;
+              metronome_pitch >>= 1;
+            }
+          }
+        }
       }
     }
 

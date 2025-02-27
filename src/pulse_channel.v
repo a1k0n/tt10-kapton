@@ -26,9 +26,9 @@ reg [7:0] amplitude;
 wire [7:0] target_amplitude = note_on ? SUSTAIN_LEVEL : 0;
 
 wire phase1_bit0 = phase1[PHASE_BITS-1];
-wire phase1_bit1 = phase1[PHASE_BITS-2];
+wire phase1_bit1 = PULSE_WIDTH ? phase1[PHASE_BITS-2] : 1;
 wire phase2_bit0 = phase2[PHASE_BITS-1];
-wire phase2_bit1 = phase2[PHASE_BITS-2];
+wire phase2_bit1 = PULSE_WIDTH ? phase2[PHASE_BITS-2] : 1;
 
 wire [7:0] phase1_out = (phase1_bit0&phase1_bit1) ? amplitude : 0;
 wire [7:0] phase2_out = (phase2_bit0&phase2_bit1) ? amplitude : 0;

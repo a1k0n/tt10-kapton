@@ -4,6 +4,8 @@ import sounddevice as sd
 from synth import pulseconfig, pulse, snare
 from consts import master_clock, clocks_per_sample, samples_per_tick, bpm, samplerate
 
+INITIAL_SONGCOUNT = 0
+
 beats_per_tick = 4
 ticks_per_beat = round(master_clock * 60 / (clocks_per_sample*samples_per_tick*beats_per_tick*bpm))
 actualbpm = master_clock * 60 / (clocks_per_sample*samples_per_tick*beats_per_tick * ticks_per_beat)
@@ -27,6 +29,16 @@ bassconfig.vibrato_envelope = 0
 #basso = '00000000000000000000000000000000'
 
 bassn = '''
+................................
+................................
+................................
+................................
+
+C.C.C.C.C.C.C.C.C.C.C.C.-.C.C.C.
+C.C.C.C.C.C.C.C.C.C.C.C.-.C.C.C.
+C.C.C.C.C.C.C.C.C.C.C.C.-.C.C.C.
+C.C.C.C.C.C.C.C.C.C.C.C.-.C.C.C.
+
 C.C.C.C.C.C.C.C.C.C.C.C.-.C.C.C.
 G.G.G.G.G.G.G.G.G.G.G.G.-.G.G.G.
 a.a.a.a.a.a.a.a.e.e.e.e.-.e.e.e.
@@ -38,6 +50,16 @@ a.a.a.a.a.a.a.a.e.e.e.e.-.b.b.b.
 C.C.C.C.C.C.C.C.-...............
 '''
 basso = '''
+11111111111111111111111111111111
+11111111111111111111111111111111
+11111111111111111111111111111111
+11111111111111111111111111111111
+
+11111111111111111111111111111111
+11111111111111111111111111111111
+11111111111111111111111111111111
+11111111111111111111111111111111
+
 22222222222222222222222222222222
 11111111111111111111111111111111
 11111111111111112222222222222222
@@ -49,6 +71,59 @@ basso = '''
 11111111111111111111111111111111
 '''
 
+backupconfig = pulseconfig()
+backupconfig.pulse_width = 0
+backupconfig.octave_transpose = 0
+backupconfig.detune = 8
+backupconfig.carrier_multiplier = 2
+backupconfig.decay = 2
+backupconfig.sustain = 1024
+backupconfig.release = 2
+
+backupn = '''
+C.C-..C-..C-..C-..C-..C.C-..C-..
+C.C-..C-..C-..C-..C-..C.C-..C-..
+C.C-..C-..C-..C-..C-..C.C-..C-..
+C.C-..C-..C-..C-..C-..C.C-..C-..
+
+C.C-..C-..C-..C-..C-..C.C-..C-..
+C.C-..C-..C-..C-..C-..C.C-..C-..
+C.C-..C-..C-..C-..C-..C.C-..C-..
+C.C-..C-..C-..C-..C-..C.C-..C-..
+
+....|....|....|....|....|....|....|....
+....|....|....|....|....|....|....|....
+....|....|....|....|....|....|....|....
+....|....|....|....|CEGC|EGCE|GCEG|CEGC
+
+-...|....|....|....|....|....|....|....
+....|....|....|....|....|....|....|....
+....|....|....|....|....|....|....|....
+CEGC|EGCE|GCEG|CEGC|EGCE|GCEG|CEGC|-...
+'''
+
+backupo = '''
+00000000000000000000000000000000
+00000000000000000000000000000000
+00000000000000000000000000000000
+00000000000000000000000000000000
+
+00000000000000000000000000000000
+00000000000000000000000000000000
+00000000000000000000000000000000
+00000000000000000000000000000000
+
+0000|0000|0000|0000|0000|0000|0000|0000
+0000|0000|0000|0000|0000|0000|0000|0000
+0000|0000|0000|0000|0000|0000|0000|0000
+0000|0000|0000|0000|0001|0011|0111|1112
+
+0000|0000|0000|0000|0000|0000|0000|0000
+0000|0000|0000|0000|0000|0000|0000|0000
+0000|0000|0000|0000|0000|0000|0000|0000
+1112|1122|1222|2223|2233|2333|3334|4444
+'''
+
 melodyconfig = pulseconfig()
 melodyconfig.pulse_width = 1
 melodyconfig.octave_transpose = 2
@@ -57,7 +132,7 @@ melodyconfig.carrier_multiplier = 1
 melodyconfig.decay = 4
 melodyconfig.sustain = 1024
 melodyconfig.release = 4
-melodyconfig.vibrato_depth = 2
+melodyconfig.vibrato_depth = 0
 melodyconfig.vibrato_rate = 2
 melodyconfig.vibrato_envelope = 6
 melodyconfig.phase_bits = 14
@@ -65,6 +140,16 @@ melodyconfig.phase_bits = 14
 #.C.C.C.C.C.C.C.C.C.C.C.-.C.C.C.
 #...2...3...4...5...6...7...8...
 melodyn = '''
+................................
+................................
+................................
+................................
+
+................................
+................................
+................................
+................................
+
 ........E.F.-.G....-..G...-.C...
 b.....A.....G.....-.........G...
 a..-e.e..-e..-e..-e..-e..-F..-G.
@@ -76,6 +161,16 @@ e..-F.G..-C..-e..-D..-C..-D..-E.
 ..........-.....................
 '''
 melodyo = '''
+00000000000000000000000000000000
+00000000000000000000000000000000
+00000000000000000000000000000000
+00000000000000000000000000000000
+
+00000000000000000000000000000000
+00000000000000000000000000000000
+00000000000000000000000000000000
+00000000000000000000000000000000
+
 00000000000000000000000000001111
 00000000000000000000000000000000
 00000000000000000000000000000000
@@ -98,25 +193,29 @@ percussion = '''
 
 
 def strip_spaces(s):
+    # remove |s first
+    s = s.replace('|', '')
     return ''.join(s.split())
 
 class audiogen:
     def __init__(self):
         self.tick_samples = 0
         self.tickcount = 0
-        self.songcount = 0
+        self.songcount = INITIAL_SONGCOUNT
         self.instruments = []
         self.instruments.append(pulse(bassconfig))
         self.instruments.append(pulse(melodyconfig))
+        self.instruments.append(pulse(backupconfig))
         self.instruments.append(snare(2))
         self.tracks = []
         self.tracks.append((strip_spaces(bassn), strip_spaces(basso)))
         self.tracks.append((strip_spaces(melodyn), strip_spaces(melodyo)))
+        self.tracks.append((strip_spaces(backupn), strip_spaces(backupo)))
         self.tracks.append((strip_spaces(percussion),))
         self.frame = 0
 
     def dump_tables(self):
-        for name, track, instrument in zip(["bass", "melody", "drum"], self.tracks, self.instruments):
+        for name, track, instrument in zip(["bass", "melody", "backup", "drum"], self.tracks, self.instruments):
             instrument.dump_tables(name, *track)
 
     def get_next_audio_chunk(self, frame_count):
