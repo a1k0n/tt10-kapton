@@ -1,4 +1,4 @@
-TARGETS = vgademo # audiotrack
+TARGETS = tt_um_a1k0n_kapton # audiotrack
 VERILATOR = verilator
 VERILATOR_FLAGS = -Wall --trace -cc --exe -I../src
 CPP = g++
@@ -6,8 +6,8 @@ CPP_FLAGS = -std=c++11 -Wall
 
 all: $(TARGETS)
 
-vgademo: ../src/vgapg.v ../src/music.v ../src/pulse_channel.v ../src/noise_channel.v vgademo_tb.cpp
-	$(VERILATOR) -Wno-widthexpand -Wno-widthtrunc --trace -cc --exe $^ -CFLAGS "-g -O3" --LDFLAGS "-lSDL2 -lSDL2_image" --top-module vgademo
+tt_um_a1k0n_kapton: ../src/tt_um_a1k0n_kapton.v ../src/music.v ../src/pulse_channel.v ../src/noise_channel.v vgademo_tb.cpp
+	$(VERILATOR) -Wno-widthexpand -Wno-widthtrunc --trace -cc --exe $^ -CFLAGS "-g -O3" --LDFLAGS "-lSDL2 -lSDL2_image" --top-module tt_um_a1k0n_kapton
 	$(MAKE) -C obj_dir -f V$@.mk
 	cp obj_dir/V$@ $@
 

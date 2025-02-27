@@ -1,5 +1,5 @@
 #include <stdint.h>
-#include "Vvgademo.h"
+#include "Vtt_um_a1k0n_kapton.h"
 #include "verilated.h"
 #include <SDL2/SDL.h>
 
@@ -17,7 +17,7 @@
 int main(int argc, char** argv) {
   Verilated::commandArgs(argc, argv);
 
-  Vvgademo* top = new Vvgademo;
+  Vtt_um_a1k0n_kapton* top = new Vtt_um_a1k0n_kapton;
 
   top->rst_n = 0;
   top->clk = 0; top->eval(); top->clk = 1; top->eval();

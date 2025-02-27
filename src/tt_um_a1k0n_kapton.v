@@ -4,7 +4,7 @@
 
 `default_nettype none
 
-module vgademo(
+module tt_um_a1k0n_kapton(
   input  wire [7:0] ui_in,    // Dedicated inputs
   output wire [7:0] uo_out,   // Dedicated outputs
   input  wire [7:0] uio_in,   // IOs: Input path
